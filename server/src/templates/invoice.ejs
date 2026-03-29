@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice <%= invoice.invoice_number %></title>
+    <style>
+        body {
+            font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 40px;
+            color: #333333;
+            background-color: #ffffff;
+            line-height: 1.6;
+        }
+        .invoice-box {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 50px;
+            border-bottom: 2px solid #f3f4f6;
+            padding-bottom: 20px;
+        }
+        .header-left {
+            max-width: 50%;
+        }
+        .header-right {
+            text-align: right;
+            max-width: 50%;
+        }
+        .invoice-title {
+            font-size: 40px;
+            font-weight: 800;
+            color: #111827;
+            margin: 0 0 10px 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .brand-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #3b82f6; /* Premium Blue */
+            margin: 0;
+        }
+        .company-details, .client-details {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+        .details-grid {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .details-col h3 {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #9ca3af;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+        .details-col p {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: #111827;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+        }
+        table th {
+            background-color: #f3f4f6;
+            color: #374151;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 12px;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        table td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+            color: #4b5563;
+        }
+        .item-name {
+            font-weight: 600;
+            color: #111827;
+            display: block;
+        }
+        .item-desc {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .totals-section {
+            width: 50%;
+            float: right;
+        }
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            font-size: 15px;
+            color: #4b5563;
+        }
+        .totals-row.grand-total {
+            font-size: 20px;
+            font-weight: 800;
+            color: #111827;
+            border-top: 2px solid #e5e7eb;
+            padding-top: 15px;
+            margin-top: 10px;
+        }
+        .clear {
+            clear: both;
+        }
+        .footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 13px;
+            color: #6b7280;
+        }
+        .footer h4 {
+            font-size: 14px;
+            color: #374151;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-box">
+        <div class="header">
+            <div class="header-left">
+                <% if (user.brand_name) { %>
+                    <h2 class="brand-name"><%= user.brand_name %></h2>
+                <% } else { %>
+                    <h2 class="brand-name"><%= user.name %></h2>
+                <% } %>
+                <div class="company-details">
+                    <%= user.email %><br>
+                    <% if (user.company_address) { %> <%= user.company_address %> <% } %>
+                </div>
+            </div>
+            <div class="header-right">
+                <h1 class="invoice-title">INVOICE</h1>
+                <p style="margin:0; font-weight: 600; color: #6b7280;">#<%= invoice.invoice_number %></p>
+            </div>
+        </div>
+
+        <div class="details-grid">
+            <div class="details-col">
+                <h3>Billed To</h3>
+                <p><%= invoice.client_name %></p>
+                <div class="client-details">
+                    <%= invoice.client_email %><br>
+                    <% if (invoice.client_address) { %> <%= invoice.client_address %> <% } %>
+                </div>
+            </div>
+            <div class="details-col text-right">
+                <h3>Date of Issue</h3>
+                <p><%= new Date(invoice.created_at).toLocaleDateString() %></p>
+                <h3 style="margin-top: 15px;">Due Date</h3>
+                <p><%= new Date(invoice.due_date).toLocaleDateString() %></p>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 50%;">Item</th>
+                    <th class="text-right">Qty</th>
+                    <th class="text-right">Price</th>
+                    <th class="text-right">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% invoice.items.forEach(function(item) { %>
+                <tr>
+                    <td>
+                        <span class="item-name"><%= item.name %></span>
+                        <% if (item.description) { %>
+                            <span class="item-desc"><%= item.description %></span>
+                        <% } %>
+                    </td>
+                    <td class="text-right"><%= item.quantity %></td>
+                    <td class="text-right">₹<%= parseFloat(item.price).toFixed(2) %></td>
+                    <td class="text-right">₹<%= (item.quantity * item.price).toFixed(2) %></td>
+                </tr>
+                <% }); %>
+            </tbody>
+        </table>
+
+        <div class="totals-section">
+            <div class="totals-row">
+                <span>Subtotal</span>
+                <span>₹<%= (parseFloat(invoice.total_amount) - parseFloat(invoice.tax_amount)).toFixed(2) %></span>
+            </div>
+            <% if (parseFloat(invoice.tax_amount) > 0) { %>
+            <div class="totals-row">
+                <span>Tax</span>
+                <span>₹<%= parseFloat(invoice.tax_amount).toFixed(2) %></span>
+            </div>
+            <% } %>
+            <div class="totals-row grand-total">
+                <span>Total Due</span>
+                <span>₹<%= parseFloat(invoice.total_amount).toFixed(2) %></span>
+            </div>
+        </div>
+        <div class="clear"></div>
+
+        <% if (invoice.payment_url || invoice.notes || user.bank_details) { %>
+        <div class="footer">
+            <% if (invoice.payment_url) { %>
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <a href="<%= invoice.payment_url %>" style="display: inline-block; padding: 12px 24px; background-color: #3b82f6; color: white; text-decoration: none; font-weight: bold; font-size: 16px; border-radius: 6px;">
+                        Pay Securely via Razorpay
+                    </a>
+                </div>
+            <% } %>
+            <% if (user.bank_details) { %>
+                <h4>Payment Instructions</h4>
+                <p><%= user.bank_details %></p>
+            <% } %>
+            <% if (invoice.notes) { %>
+                <h4>Notes</h4>
+                <p><%= invoice.notes %></p>
+            <% } %>
+        </div>
+        <% } %>
+    </div>
+</body>
+</html>
