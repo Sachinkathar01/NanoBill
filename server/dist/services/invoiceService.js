@@ -61,7 +61,7 @@ export const InvoiceServices = {
         return result.rows[0] || null;
     },
     async updateInvoicePaymentLink(invoiceId, userId, paymentUrl, paymentLinkId) {
-        const result = await pool.query("UPDATE invoices SET payment_url = $1, payment_link_id = $2 WHERE id = $3 AND user_id = $4 RETURNING *", [paymentUrl, paymentLinkId, invoiceId, userId]);
+        const result = await pool.query("UPDATE invoices SET payment_url = $1, payment_link_id = $2, status = 'Sent' WHERE id = $3 AND user_id = $4 RETURNING *", [paymentUrl, paymentLinkId, invoiceId, userId]);
         return result.rows[0] || null;
     }
 };

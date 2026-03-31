@@ -1,23 +1,23 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+dotenv.config();
 
 import {Pool} from 'pg';
 
 
 const pool = new Pool({
-    host:process.env.DB_HOST,
-    user:process.env.DB_USER,
-    password:process.env.DB_PASSWORD,
-    database:process.env.DB_NAME,
-    port:Number(process.env.DB_PORT)
-})
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false // Strictly required by Supabase logic 
+    }
+});
 
 
 pool.query("SELECT NOW()",(err,res)=>{
     if(err){
-        console.log(err)
+        console.error("Supabase Database connection error:", err);
     }
     else{
-        console.log(res.rows[0])
+        console.log("Connected to Supabase PostgreSQL reliably");
     }
 })
 
