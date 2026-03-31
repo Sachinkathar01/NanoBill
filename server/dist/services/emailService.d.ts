@@ -1,0 +1,2 @@
+export declare const sendOverdueEmail: (clientEmail: string, clientName: string, invoiceNumber: string, amount: string, paymentUrl: string | null) => Promise<void>;
+//# sourceMappingURL=emailService.d.ts.map
