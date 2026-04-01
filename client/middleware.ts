@@ -8,26 +8,38 @@ const protectedRoutes = ['/dashboard', '/clients', '/items', '/invoices', '/sett
 const authRoutes = ['/login', '/register'];
 
 export function middleware(request: NextRequest) {
-  // Your backend sends an HTTP-only cookie named "token".
-  // The middleware intercepts this to determine access.
-  const token = request.cookies.get('token')?.value;
-  const { pathname } = request.nextUrl;
+  try {
+    // Your backend sends an HTTP-only cookie named "token".
+    // The middleware intercepts this to determine access.
+    const token = request.cookies.get('token')?.value;
+    const { pathname } = request.nextUrl;
 
-  const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
-  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
+    // Debug logging (remove in production)
+    console.log('[Middleware] Path:', pathname, '| Token:', token ? 'present' : 'absent');
 
-  // If trying to access protected route without token, bounce to login
-  if (isProtectedRoute && !token) {
-    return NextResponse.redirect(new URL('/login', request.url));
+    const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
+    const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
+
+    // If trying to access protected route without token, bounce to login
+    if (isProtectedRoute && !token) {
+      console.warn('[Middleware] Protected route, no token. Redirecting to /login');
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+
+    // If trying to hit login/register but already authenticated, bounce to dashboard
+    if (isAuthRoute && token) {
+      console.warn('[Middleware] Auth route, but token present. Redirecting to /dashboard');
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+
+    // Otherwise, proceed neutrally
+    return NextResponse.next();
+  } catch (err) {
+    // Log the error for debugging
+    console.error('[Middleware] Error:', err);
+    // Optionally, redirect to a generic error page or return a response
+    return new NextResponse('Internal middleware error', { status: 500 });
   }
-
-  // If trying to hit login/register but already authenticated, bounce to dashboard
-  if (isAuthRoute && token) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-
-  // Otherwise, proceed neutrally
-  return NextResponse.next();
 }
 
 // Config matcher ensures we don't accidentally intercept APIs or Static Files
