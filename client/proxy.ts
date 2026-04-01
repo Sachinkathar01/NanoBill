@@ -7,7 +7,7 @@ const protectedRoutes = ['/dashboard', '/clients', '/items', '/invoices', '/sett
 // Routes that logged-in users shouldn't access (like re-logging in)
 const authRoutes = ['/login', '/register'];
 
-export function proxy(request: NextRequest) {
+export default function proxy(request: NextRequest) {
     try {
         const token = request.cookies.get('token')?.value;
         const { pathname } = request.nextUrl;
