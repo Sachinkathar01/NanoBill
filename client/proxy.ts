@@ -1,43 +1,51 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Routes that require standard JWT authentication
+// Routes that require authentication
 const protectedRoutes = ['/dashboard', '/clients', '/items', '/invoices', '/settings'];
 
-// Routes that logged-in users shouldn't access (like re-logging in)
+// Routes that logged-in users shouldn't access
 const authRoutes = ['/login', '/register'];
 
-export default function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
     try {
         const token = request.cookies.get('token')?.value;
         const { pathname } = request.nextUrl;
 
-        // Debug logging (remove in production)
-        // console.log('[Proxy] Path:', pathname, '| Token:', token ? 'present' : 'absent');
+        const isProtectedRoute = protectedRoutes.some((route) =>
+            pathname.startsWith(route)
+        );
 
-        const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
-        const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
+        const isAuthRoute = authRoutes.some((route) =>
+            pathname.startsWith(route)
+        );
 
-        // If trying to access protected route without token, bounce to login
+        // 🚫 If accessing protected route without token → go to login
         if (isProtectedRoute && !token) {
-            // console.warn('[Proxy] Protected route, no token. Redirecting to /login');
             return NextResponse.redirect(new URL('/login', request.url));
         }
 
-        // If trying to hit login/register but already authenticated, bounce to dashboard
+        // 🚫 If already logged in and trying to access login/register → go to dashboard
         if (isAuthRoute && token) {
-            // console.warn('[Proxy] Auth route, but token present. Redirecting to /dashboard');
             return NextResponse.redirect(new URL('/dashboard', request.url));
         }
 
-        // Otherwise, proceed neutrally
+        // ✅ Allow request
         return NextResponse.next();
     } catch (err) {
-        // console.error('[Proxy] Error:', err);
-        return new NextResponse('Internal proxy error', { status: 500 });
+        return new NextResponse('Internal middleware error', { status: 500 });
     }
 }
 
+// 🎯 IMPORTANT: Restrict middleware only to needed routes
 export const config = {
-    matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+    matcher: [
+        '/dashboard/:path*',
+        '/clients/:path*',
+        '/items/:path*',
+        '/invoices/:path*',
+        '/settings/:path*',
+        '/login',
+        '/register',
+    ],
 };
