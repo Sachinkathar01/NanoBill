@@ -27,7 +27,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
-        res.status(201).json({ user: { id: user.id, name: user.name, email: user.email } });
+        res.status(201).json({ user: { id: user.id, name: user.name, email: user.email }, token });
     } catch (err: any) {
         console.error(err.message);
         res.status(500).json({ message: "Server Error" });
@@ -59,7 +59,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
-        res.status(200).json({ user: { id: loginResult.user.id, name: loginResult.user.name, email: loginResult.user.email } });
+        res.status(200).json({ user: { id: loginResult.user.id, name: loginResult.user.name, email: loginResult.user.email }, token: loginResult.token });
     } catch (err: any) {
         console.error(err.message);
         res.status(500).json({ message: "Server Error" });
