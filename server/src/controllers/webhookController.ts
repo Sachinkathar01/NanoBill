@@ -13,28 +13,51 @@ export const handleRazorpayWebhook = async (req: Request, res: Response): Promis
 
         const signature = req.headers["x-razorpay-signature"] as string;
         if (!signature) {
-             res.status(400).json({ status: "missing signature" });
-             return;
+            res.status(400).json({ status: "missing signature" });
+            return;
         }
 
+        if (!Buffer.isBuffer(req.body)) {
+            res.status(400).json({ status: "invalid webhook body" });
+            return;
+        }
+
+        const rawBody = req.body.toString("utf8");
+
         // Validate signature cryptographically
-        const isValid = Razorpay.validateWebhookSignature(JSON.stringify(req.body), signature, secret);
-        
+        const isValid = Razorpay.validateWebhookSignature(rawBody, signature, secret);
+
         if (!isValid) {
             res.status(400).json({ status: "invalid signature" });
             return;
         }
 
-        const event = req.body.event;
+        const body = JSON.parse(rawBody);
+
+        const event = body.event;
+        let paymentLinkId: string | undefined;
+
         // Listen specifically for payment_link.paid
         if (event === "payment_link.paid" || event === "payment_link.partially_paid") {
-            const paymentLinkId = req.body.payload.payment_link.entity.id;
-            
-            await pool.query(
-                "UPDATE invoices SET status = 'Paid' WHERE payment_link_id = $1", 
+            paymentLinkId = body?.payload?.payment_link?.entity?.id;
+        }
+
+        // Some integrations emit payment.captured while still carrying the payment_link_id in payment entity
+        if (event === "payment.captured") {
+            paymentLinkId = body?.payload?.payment?.entity?.payment_link_id;
+        }
+
+        if (paymentLinkId) {
+            const result = await pool.query(
+                "UPDATE invoices SET status = 'Paid' WHERE payment_link_id = $1 RETURNING id",
                 [paymentLinkId]
             );
-            console.log(`Razorpay Webhook: Invoice with payment_link_id ${paymentLinkId} marked as Paid.`);
+
+            if (result.rowCount && result.rowCount > 0) {
+                console.log(`Razorpay Webhook: Invoice with payment_link_id ${paymentLinkId} marked as Paid.`);
+            } else {
+                console.warn(`Razorpay Webhook: No invoice found for payment_link_id ${paymentLinkId}.`);
+            }
         }
 
         // Acknowledge receipt 
