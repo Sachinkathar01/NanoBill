@@ -11,14 +11,14 @@ export const createInvoice = async (req: Request, res: Response): Promise<void> 
         const { client_id, invoice_number, due_date, tax_amount, total_amount, notes, items } = req.body;
 
         if (!client_id || !invoice_number || !total_amount || !items || items.length === 0) {
-             res.status(400).json({ message: "Missing required invoice fields." });
-             return;
+            res.status(400).json({ message: "Missing required invoice fields." });
+            return;
         }
 
         const invoice = await InvoiceServices.createInvoice(
             userId, client_id, invoice_number, due_date, tax_amount, total_amount, notes, items
         );
-        
+
         res.status(201).json({ invoice });
     } catch (err: any) {
         console.error(err.message);
@@ -29,6 +29,7 @@ export const createInvoice = async (req: Request, res: Response): Promise<void> 
 export const getInvoices = async (req: Request, res: Response): Promise<void> => {
     try {
         const userId = req.user.id;
+        await InvoiceServices.reconcilePaymentStatuses(userId);
         const invoices = await InvoiceServices.getInvoicesByUser(userId);
         res.status(200).json({ invoices });
     } catch (err: any) {
@@ -43,12 +44,12 @@ export const getInvoiceById = async (req: Request, res: Response): Promise<void>
         const id = req.params.id as string;
 
         const invoice = await InvoiceServices.getInvoiceDetails(id, userId);
-        
+
         if (!invoice) {
             res.status(404).json({ message: "Invoice not found or unauthorized" });
             return;
         }
-        
+
         res.status(200).json({ invoice });
     } catch (err: any) {
         console.error(err.message);
@@ -63,7 +64,7 @@ export const updateInvoiceStatus = async (req: Request, res: Response): Promise<
         const { status } = req.body;
 
         const updated = await InvoiceServices.updateInvoiceStatus(id, userId, status);
-        
+
         if (!updated) {
             res.status(404).json({ message: "Invoice not found or unauthorized" });
             return;
@@ -95,7 +96,7 @@ export const generateInvoicePdf = async (req: Request, res: Response): Promise<v
         }
 
         const pdfBuffer = await generatePDFBuffer({ user, invoice });
-        
+
         // Bypass Cloudinary strict PDF restrictions completely. Serve file stream natively from local Node memory.
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `inline; filename="${invoice.invoice_number}.pdf"`);
@@ -122,19 +123,19 @@ export const generateInvoicePaymentLink = async (req: Request, res: Response): P
             invoice.invoice_number,
             invoice.client_name,
             invoice.client_email,
-            invoice.client_phone 
+            invoice.client_phone
         );
 
         const updatedInvoice = await InvoiceServices.updateInvoicePaymentLink(
-            id, 
-            userId, 
-            paymentLinkResponse.short_url, 
+            id,
+            userId,
+            paymentLinkResponse.short_url,
             paymentLinkResponse.id
         );
 
-        res.status(200).json({ 
+        res.status(200).json({
             message: "Payment Link Generated Successfully",
-            payment_url: updatedInvoice.payment_url 
+            payment_url: updatedInvoice.payment_url
         });
     } catch (err: any) {
         console.error(err.message);

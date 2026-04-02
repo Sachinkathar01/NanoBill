@@ -19,74 +19,94 @@ export const generatePDFBuffer = async (templateData: any): Promise<Buffer> => {
     return await new Promise<Buffer>((resolve, reject) => {
         const doc = new PDFDocument({ size: 'A4', margin: 50 });
         const chunks: Buffer[] = [];
+        const pageWidth = doc.page.width;
+        const pageMargin = 50;
+        const contentWidth = pageWidth - pageMargin * 2;
 
         doc.on('data', (chunk: Buffer) => chunks.push(chunk));
         doc.on('end', () => resolve(Buffer.concat(chunks)));
         doc.on('error', reject);
 
-        doc.fontSize(22).text(user.name || 'NanoBill', { align: 'left' });
-        doc.moveDown(0.5);
-        doc.fontSize(11).fillColor('#666').text(user.email || '');
-        doc.fillColor('#000');
+        const leftColX = pageMargin;
+        const rightColX = pageWidth - pageMargin - 220;
 
-        doc.moveDown(1.5);
-        doc.fontSize(18).text(`Invoice ${invoice.invoice_number || ''}`, { align: 'right' });
-        doc.moveDown(0.5);
-        doc.fontSize(11).text(`Status: ${invoice.status || 'Draft'}`, { align: 'right' });
-        doc.text(`Created: ${formatDate(invoice.created_at)}`, { align: 'right' });
-        doc.text(`Due: ${formatDate(invoice.due_date)}`, { align: 'right' });
+        doc.font('Helvetica-Bold').fontSize(24).fillColor('#111').text(user.name || 'NanoBill', leftColX, 50);
+        doc.font('Helvetica').fontSize(10).fillColor('#666').text(user.email || '', leftColX, 80);
 
-        doc.moveDown(1.2);
-        doc.fontSize(12).fillColor('#333').text('Bill To');
-        doc.fillColor('#000').fontSize(11);
-        doc.text(invoice.client_name || 'Client');
-        if (invoice.client_email) doc.text(invoice.client_email);
-        if (invoice.client_phone) doc.text(invoice.client_phone);
-        if (invoice.client_address) doc.text(invoice.client_address);
+        doc.font('Helvetica-Bold').fontSize(22).fillColor('#111').text(`INVOICE`, rightColX, 50, {
+            width: 220,
+            align: 'right'
+        });
+        doc.font('Helvetica').fontSize(11).fillColor('#222').text(`#${invoice.invoice_number || ''}`, rightColX, 78, {
+            width: 220,
+            align: 'right'
+        });
+        doc.font('Helvetica').fontSize(10).fillColor('#666').text(`Status: ${invoice.status || 'Draft'}`, rightColX, 96, {
+            width: 220,
+            align: 'right'
+        });
+        doc.text(`Issued: ${formatDate(invoice.created_at)}`, rightColX, 111, {
+            width: 220,
+            align: 'right'
+        });
+        doc.text(`Due: ${formatDate(invoice.due_date)}`, rightColX, 126, {
+            width: 220,
+            align: 'right'
+        });
 
-        doc.moveDown(1.2);
-        doc.fontSize(12).text('Items');
-        doc.moveDown(0.5);
+        doc.moveTo(pageMargin, 155).lineTo(pageWidth - pageMargin, 155).strokeColor('#E6E6E6').stroke();
 
-        const startX = 50;
-        const qtyX = 360;
-        const priceX = 430;
-        const amountX = 510;
+        doc.font('Helvetica-Bold').fontSize(12).fillColor('#111').text('Bill To', pageMargin, 172);
+        doc.font('Helvetica').fontSize(11).fillColor('#222').text(invoice.client_name || 'Client', pageMargin, 192);
+        if (invoice.client_email) doc.text(invoice.client_email, pageMargin, doc.y + 3);
+        if (invoice.client_phone) doc.text(invoice.client_phone, pageMargin, doc.y + 3);
+        if (invoice.client_address) doc.text(invoice.client_address, pageMargin, doc.y + 3, { width: 280 });
 
-        doc.fontSize(10).fillColor('#666');
-        doc.text('Description', startX);
-        doc.text('Qty', qtyX);
-        doc.text('Price', priceX);
-        doc.text('Amount', amountX);
-        doc.fillColor('#000');
+        const tableStartY = Math.max(doc.y + 25, 270);
+        const descriptionX = pageMargin;
+        const qtyX = pageMargin + 300;
+        const priceX = pageMargin + 360;
+        const amountX = pageMargin + 450;
 
-        doc.moveDown(0.4);
-        doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor('#ddd').stroke();
-        doc.moveDown(0.5);
+        doc.rect(pageMargin, tableStartY, contentWidth, 28).fill('#F6F7F9');
+        doc.font('Helvetica-Bold').fontSize(10).fillColor('#4A4A4A');
+        doc.text('Description', descriptionX + 8, tableStartY + 9);
+        doc.text('Qty', qtyX + 8, tableStartY + 9);
+        doc.text('Price', priceX + 8, tableStartY + 9);
+        doc.text('Amount', amountX + 8, tableStartY + 9);
+
+        let rowY = tableStartY + 28;
+        doc.font('Helvetica').fontSize(10).fillColor('#111');
 
         for (const item of items) {
             const quantity = Number(item.quantity || 0);
             const price = Number(item.price || 0);
             const amount = quantity * price;
+            const itemName = item.name || item.description || 'Item';
 
-            doc.fontSize(10).text(item.name || 'Item', startX, doc.y, { width: 290 });
-            doc.text(String(quantity), qtyX, doc.y);
-            doc.text(`INR ${formatAmount(price)}`, priceX, doc.y);
-            doc.text(`INR ${formatAmount(amount)}`, amountX, doc.y);
-            doc.moveDown(0.7);
+            doc.rect(pageMargin, rowY, contentWidth, 26).fillAndStroke('#FFFFFF', '#EFEFEF');
+            doc.fillColor('#111').text(itemName, descriptionX + 8, rowY + 8, { width: 285, ellipsis: true });
+            doc.text(String(quantity), qtyX + 8, rowY + 8);
+            doc.text(`INR ${formatAmount(price)}`, priceX + 8, rowY + 8);
+            doc.text(`INR ${formatAmount(amount)}`, amountX + 8, rowY + 8);
+
+            rowY += 26;
         }
 
-        doc.moveDown(0.6);
-        doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor('#ddd').stroke();
+        const summaryY = rowY + 16;
+        const summaryWidth = 210;
+        const summaryX = pageWidth - pageMargin - summaryWidth;
 
-        doc.moveDown(0.8);
-        doc.fontSize(11).text(`Tax: INR ${formatAmount(invoice.tax_amount)}`, { align: 'right' });
-        doc.fontSize(14).text(`Total: INR ${formatAmount(invoice.total_amount)}`, { align: 'right' });
+        doc.rect(summaryX, summaryY, summaryWidth, 70).fill('#FAFAFA').stroke('#EAEAEA');
+        doc.font('Helvetica').fontSize(11).fillColor('#333').text(`Tax: INR ${formatAmount(invoice.tax_amount)}`, summaryX + 12, summaryY + 14);
+        doc.font('Helvetica-Bold').fontSize(14).fillColor('#111').text(`Total: INR ${formatAmount(invoice.total_amount)}`, summaryX + 12, summaryY + 38);
 
         if (invoice.notes) {
-            doc.moveDown(1.5);
-            doc.fontSize(11).fillColor('#333').text('Notes');
-            doc.fillColor('#000').fontSize(10).text(String(invoice.notes));
+            const notesY = summaryY + 95;
+            doc.font('Helvetica-Bold').fontSize(11).fillColor('#333').text('Notes', pageMargin, notesY);
+            doc.font('Helvetica').fontSize(10).fillColor('#111').text(String(invoice.notes), pageMargin, notesY + 18, {
+                width: contentWidth
+            });
         }
 
         doc.end();

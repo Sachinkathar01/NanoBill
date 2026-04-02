@@ -1,4 +1,5 @@
 import pool from "../config/db.js";
+import razorpayInstance from "../config/razorpay.js";
 
 interface InvoiceItemInput {
     item_id: string;
@@ -7,6 +8,30 @@ interface InvoiceItemInput {
 }
 
 export const InvoiceServices = {
+    async reconcilePaymentStatuses(userId: string) {
+        const sentInvoicesRes = await pool.query(
+            `SELECT id, payment_link_id, status
+             FROM invoices
+             WHERE user_id = $1 AND payment_link_id IS NOT NULL AND status != 'Paid'`,
+            [userId]
+        );
+
+        for (const invoice of sentInvoicesRes.rows) {
+            try {
+                const paymentLink = await razorpayInstance.paymentLink.fetch(invoice.payment_link_id);
+
+                if (paymentLink?.status === "paid") {
+                    await pool.query(
+                        "UPDATE invoices SET status = 'Paid' WHERE id = $1",
+                        [invoice.id]
+                    );
+                }
+            } catch (error: any) {
+                console.warn(`Payment reconciliation skipped for invoice ${invoice.id}: ${error?.message || "Unknown error"}`);
+            }
+        }
+    },
+
     async createInvoice(
         userId: string,
         clientId: string,
@@ -30,7 +55,7 @@ export const InvoiceServices = {
                 VALUES ($1, $2, $3, $4, $5, $6, $7, 'Draft') RETURNING *`,
                 [userId, clientId, invoiceNumber, dueDate, taxAmount, totalAmount, notes]
             );
-            
+
             const newInvoice = invoiceResult.rows[0];
 
             // 2. Insert Line Items
