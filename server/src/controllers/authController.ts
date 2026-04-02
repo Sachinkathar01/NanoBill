@@ -6,8 +6,8 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
         const { name, email, password } = req.body;
 
         if (!name || !email || !password) {
-             res.status(400).json({ message: "Missing required fields" });
-             return;
+            res.status(400).json({ message: "Missing required fields" });
+            return;
         }
 
         const userExists = await AuthServices.checkUserExists(email);
@@ -18,10 +18,12 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
 
         const { user, token } = await AuthServices.register(name, email, password);
 
+        const isProduction = process.env.NODE_ENV === "production";
+
         res.cookie("token", token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
+            secure: isProduction,
+            sameSite: isProduction ? "none" : "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
@@ -39,7 +41,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
         if (!email || !password) {
             res.status(400).json({ message: "Missing required fields" });
             return;
-       }
+        }
 
         const loginResult = await AuthServices.login(email, password);
 
@@ -48,10 +50,12 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
+        const isProduction = process.env.NODE_ENV === "production";
+
         res.cookie("token", loginResult.token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
+            secure: isProduction,
+            sameSite: isProduction ? "none" : "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
@@ -63,11 +67,13 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
 };
 
 export const logoutUser = async (req: Request, res: Response): Promise<void> => {
+    const isProduction = process.env.NODE_ENV === "production";
+
     res.cookie("token", "", {
         httpOnly: true,
         expires: new Date(0), // expires immediately
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "lax",
     });
     res.status(200).json({ message: "Logged out successfully" });
 };
@@ -76,7 +82,7 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
     try {
         const userId = req.user.id;
         const user = await AuthServices.getUserById(userId);
-        
+
         if (!user) {
             res.status(404).json({ message: "User not found" });
             return;
