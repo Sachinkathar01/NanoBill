@@ -60,7 +60,7 @@ export default function LoginRoute() {
           <div className="space-y-2">
             <div className="flex justify-between">
               <Label htmlFor="password">Password</Label>
-              <span className="text-xs text-neutral-500 cursor-pointer hover:text-white">Forgot?</span>
+              <Link href="/forgot-password" className="text-xs text-neutral-500 hover:text-white">Forgot?</Link>
             </div>
             <Input id="password" type="password" {...register("password")} className="bg-[#0c0c0c] border-white/10 text-white" />
             {errors.password && <p className="text-red-400 text-xs">{errors.password.message}</p>}

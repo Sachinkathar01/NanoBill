@@ -44,23 +44,23 @@ export default function InvoicesPage() {
 
    const generatePDF = async (id: string) => {
       try {
-         toast.info("Compiling native PDF stream...");
+         toast.info("Generating PDF...");
          // Using responseType blob tells Axios we are downloading raw binary data
          const res = await api.get(`/invoices/${id}/download-pdf`, { responseType: 'blob' });
 
          const url = window.URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
          window.open(url, "_blank");
-         toast.success("PDF instantly rendered locally!");
+         toast.success("PDF generated!");
       } catch (err: any) {
-         toast.error("Failed to compile native PDF stream");
+         toast.error("Failed to generate PDF");
       }
    }
 
    const generatePaymentLink = async (id: string) => {
       try {
-         toast.info("Generating secure Razorpay Node...");
+         toast.info("Generating payment link...");
          const res = await api.post(`/invoices/${id}/payment-link`);
-         toast.success("Payment Link Issued!");
+         toast.success("Payment Link Generated!");
          loadInvoices();
       } catch (err: any) {
          toast.error(err.response?.data?.message || "Failed to issue link");
@@ -72,7 +72,7 @@ export default function InvoicesPage() {
          <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-medium tracking-tight">Invoices</h1>
             <Button className="bg-white text-black hover:bg-neutral-200 shadow-xl shadow-white/5" asChild>
-               <Link href="/dashboard/invoices/new">Build Invoice</Link>
+               <Link href="/dashboard/invoices/new">Create Invoice</Link>
             </Button>
          </div>
 
@@ -89,9 +89,9 @@ export default function InvoicesPage() {
                </TableHeader>
                <TableBody>
                   {isLoading ? (
-                     <TableRow className="border-none hover:bg-transparent"><TableCell colSpan={5} className="text-center py-16 text-neutral-500 font-mono">Loading telemetry...</TableCell></TableRow>
+                     <TableRow className="border-none hover:bg-transparent"><TableCell colSpan={5} className="text-center py-16 text-neutral-500 font-mono">Loading invoices...</TableCell></TableRow>
                   ) : invoices.length === 0 ? (
-                     <TableRow className="border-none hover:bg-transparent"><TableCell colSpan={5} className="text-center py-16 text-neutral-500 border-dashed font-mono">0 Invoices deployed.</TableCell></TableRow>
+                     <TableRow className="border-none hover:bg-transparent"><TableCell colSpan={5} className="text-center py-16 text-neutral-500 border-dashed font-mono">No invoices created yet.</TableCell></TableRow>
                   ) : (
                      invoices.map((inv) => (
                         <TableRow key={inv.id} className="border-white/5 hover:bg-white/2 transition-colors">
@@ -108,7 +108,7 @@ export default function InvoicesPage() {
                            <TableCell className="font-bold whitespace-nowrap text-white">₹{parseFloat(inv.total_amount).toFixed(2)}</TableCell>
                            <TableCell className="text-right space-x-2">
                               <button onClick={() => generatePDF(inv.id)} className="inline-flex h-8 items-center justify-center rounded-md border border-white/10 bg-white/5 px-3 text-xs font-medium hover:bg-white/10 transition-colors text-white">
-                                 <FileText className="h-3 w-3 mr-1" /> Compile PDF
+                                 <FileText className="h-3 w-3 mr-1" /> Download PDF
                               </button>
 
                               {inv.payment_url ? (
@@ -117,7 +117,7 @@ export default function InvoicesPage() {
                                  </a>
                               ) : (
                                  <button onClick={() => generatePaymentLink(inv.id)} className="inline-flex h-8 items-center justify-center rounded-md border border-white/10 bg-transparent px-3 text-xs font-medium hover:bg-white/3 transition-colors text-neutral-400">
-                                    <Zap className="h-3 w-3 mr-1" /> Payment Fast-Link
+                                    <Zap className="h-3 w-3 mr-1" /> Generate Payment Link
                                  </button>
                               )}
                            </TableCell>

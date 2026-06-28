@@ -1,7 +1,9 @@
 import pool from "../config/db.js";
+import { InvoiceServices } from "../services/invoiceService.js";
 export const getDashboardOverview = async (req, res) => {
     try {
         const userId = req.user.id;
+        await InvoiceServices.reconcilePaymentStatuses(userId);
         // 1. Total Active Clients
         const clientCountRes = await pool.query("SELECT COUNT(*) as count FROM clients WHERE user_id = $1", [userId]);
         const activeClientsCount = parseInt(clientCountRes.rows[0].count, 10);
@@ -11,7 +13,10 @@ export const getDashboardOverview = async (req, res) => {
         // 3. Pending Invoices (count of invoices that are NOT 'Paid')
         const pendingInvoicesRes = await pool.query("SELECT COUNT(*) as count FROM invoices WHERE user_id = $1 AND status != 'Paid'", [userId]);
         const pendingInvoicesCount = parseInt(pendingInvoicesRes.rows[0].count, 10);
-        // 4. Recent Invoices (limit 5)
+        // 4. Paid invoices count
+        const paidInvoicesRes = await pool.query("SELECT COUNT(*) as count FROM invoices WHERE user_id = $1 AND status = 'Paid'", [userId]);
+        const paidInvoicesCount = parseInt(paidInvoicesRes.rows[0].count, 10);
+        // 5. Recent Invoices (limit 5)
         const recentInvoicesRes = await pool.query(`SELECT i.id, i.invoice_number, i.status, i.total_amount, i.created_at, c.name as client_name
              FROM invoices i
              LEFT JOIN clients c ON i.client_id = c.id
@@ -19,13 +24,23 @@ export const getDashboardOverview = async (req, res) => {
              ORDER BY i.created_at DESC
              LIMIT 5`, [userId]);
         const recentInvoices = recentInvoicesRes.rows;
+        // 6. Recent paid invoices (limit 5)
+        const recentPaidInvoicesRes = await pool.query(`SELECT i.id, i.invoice_number, i.total_amount, i.created_at, c.name as client_name
+             FROM invoices i
+             LEFT JOIN clients c ON i.client_id = c.id
+             WHERE i.user_id = $1 AND i.status = 'Paid'
+             ORDER BY i.created_at DESC
+             LIMIT 5`, [userId]);
+        const recentPaidInvoices = recentPaidInvoicesRes.rows;
         res.status(200).json({
             stats: {
                 activeClients: activeClientsCount,
                 totalRevenue: totalRevenue,
-                pendingInvoices: pendingInvoicesCount
+                pendingInvoices: pendingInvoicesCount,
+                paidInvoices: paidInvoicesCount
             },
-            recentInvoices
+            recentInvoices,
+            recentPaidInvoices
         });
     }
     catch (err) {

@@ -1,28 +1,73 @@
 "use client";
 
+import { motion } from "framer-motion";
+import { UserPlus, Link2, BellDot } from "lucide-react";
+
 export const HowItWorks = () => {
-   return (
-      <section id="how-it-works" className="py-24 px-6 max-w-5xl mx-auto">
-         <div className="mb-16">
-             <h2 className="text-3xl font-medium tracking-tight mb-3 text-white">Getting Paid workflow</h2>
-             <p className="text-neutral-500 text-lg max-w-xl font-light">A seamless three step process to manage your entire digital billing lifecycle.</p>
-         </div>
-         
-         <div className="relative border-l border-white/[0.08] ml-3 md:ml-0 space-y-12">
-            {[
-              { step: "01", title: "Initialize Vault", desc: "Upload your product SKUs and client DB into the system securely." },
-              { step: "02", title: "Compile Invoice", desc: "NanoBill computes the geometry, injects Razorpay, and spits out a hosted PDF hash." },
-              { step: "03", title: "Listen for Event", desc: "The background webhook securely waits for the transaction completion and syncs." }
-            ].map((s, i) => (
-                <div key={i} className="pl-10 relative group">
-                    <div className="absolute left-[-16px] top-1 mt-[-2px] h-8 w-8 rounded-full bg-[#080808] border border-white/[0.1] group-hover:border-white/[0.3] transition-colors flex items-center justify-center text-[10px] font-mono text-neutral-400">
-                       {s.step}
-                    </div>
-                    <h3 className="text-sm font-semibold mb-1.5 text-white">{s.title}</h3>
-                    <p className="text-neutral-500 text-sm leading-relaxed max-w-md">{s.desc}</p>
+  const steps = [
+    {
+      step: "01",
+      icon: <UserPlus className="h-5 w-5 text-[#F97316]" />,
+      title: "Create Invoice",
+      desc: "Draft a clean invoice in under 30 seconds. Type in client contact details and payment amounts directly on a single page."
+    },
+    {
+      step: "02",
+      icon: <Link2 className="h-5 w-5 text-[#F97316]" />,
+      title: "Share via WhatsApp",
+      desc: "Deliver secure, custom checkout links directly to client chat windows. Clients pay instantly using UPI, NetBanking, or Credit Cards."
+    },
+    {
+      step: "03",
+      icon: <BellDot className="h-5 w-5 text-[#F97316]" />,
+      title: "AI Collects Payment Automatically",
+      desc: "Our background schedule triggers automated professional reminders. Late fee penalties are calculated and applied dynamically until settled."
+    }
+  ];
+
+  return (
+    <section id="how-it-works" className="py-32 px-6 max-w-5xl mx-auto border-t border-[#262626] bg-[#0D0D0D]/20">
+      {/* Title */}
+      <div className="mb-20 text-center space-y-4">
+        <span className="text-[10px] font-mono uppercase tracking-widest text-[#9CA3AF]">
+          Workflow Architecture
+        </span>
+        <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-[#FAFAFA]">
+          Three steps to settled invoices.<br />
+          <span className="text-[#9CA3AF] font-light">Zero manual administrative overhead.</span>
+        </h2>
+      </div>
+
+      {/* Steps List */}
+      <div className="relative border-l border-[#262626] ml-4 md:ml-8 space-y-12 max-w-3xl mx-auto">
+        {steps.map((s, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: i * 0.15 }}
+            className="pl-12 relative group"
+          >
+            {/* Step Counter Bubble */}
+            <div className="absolute left-[-20px] top-1 h-10 w-10 rounded-full bg-[#090909] border border-[#262626] group-hover:border-[#F97316]/30 transition-colors flex items-center justify-center text-[11px] font-mono text-[#F97316]">
+              {s.step}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="p-1.5 rounded-md bg-[#F97316]/5 border border-[#262626]">
+                  {s.icon}
                 </div>
-            ))}
-         </div>
-      </section>
-   )
-}
+                <h3 className="text-sm font-semibold text-[#FAFAFA]">{s.title}</h3>
+              </div>
+              <p className="text-xs text-[#9CA3AF] font-light leading-relaxed max-w-xl">
+                {s.desc}
+              </p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+};

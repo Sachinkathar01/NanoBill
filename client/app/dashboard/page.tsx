@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import Link from "next/link";
 
 interface DashboardStats {
    activeClients: number;
@@ -34,14 +35,23 @@ export default function DashboardOverview() {
    const [recentInvoices, setRecentInvoices] = useState<RecentInvoice[]>([]);
    const [recentPaidInvoices, setRecentPaidInvoices] = useState<RecentPaidInvoice[]>([]);
    const [isLoading, setIsLoading] = useState(true);
+   const [onboardingIncomplete, setOnboardingIncomplete] = useState(false);
 
    useEffect(() => {
       const loadDashboardData = async () => {
          try {
-            const res = await api.get("/dashboard/stats");
-            setStats(res.data.stats);
-            setRecentInvoices(res.data.recentInvoices);
-            setRecentPaidInvoices(res.data.recentPaidInvoices || []);
+            const [statsRes, meRes] = await Promise.all([
+               api.get("/dashboard/stats"),
+               api.get("/auth/me")
+            ]);
+            setStats(statsRes.data.stats);
+            setRecentInvoices(statsRes.data.recentInvoices);
+            setRecentPaidInvoices(statsRes.data.recentPaidInvoices || []);
+
+            const profile = meRes.data?.user;
+            if (!profile?.business_name || !profile?.bank_account_number) {
+               setOnboardingIncomplete(true);
+            }
          } catch (err: any) {
             toast.error("Failed to load dashboard statistics");
          } finally {
@@ -54,7 +64,21 @@ export default function DashboardOverview() {
 
    return (
       <div className="max-w-6xl mx-auto space-y-8">
-         <h1 className="text-3xl font-medium tracking-tight">Overview</h1>
+         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <h1 className="text-3xl font-medium tracking-tight">Overview</h1>
+         </div>
+
+         {!isLoading && onboardingIncomplete && (
+            <div className="p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 text-amber-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+               <div>
+                  <h3 className="font-semibold text-sm">⚠️ Complete Your SaaS Onboarding</h3>
+                  <p className="text-xs text-amber-400/80 mt-1">To enable direct bank payouts and generate tax-compliant GST invoices, please fill in your Business & Bank details in Settings.</p>
+               </div>
+               <Link href="/dashboard/settings" className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-black text-xs font-semibold rounded-md transition-colors whitespace-nowrap">
+                  Configure Profile
+               </Link>
+            </div>
+         )}
 
          {/* Stats Cards */}
          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

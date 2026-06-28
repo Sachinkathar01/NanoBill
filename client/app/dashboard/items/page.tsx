@@ -77,7 +77,7 @@ export default function ItemsPage() {
             headers: { 'Content-Type': 'multipart/form-data' }
          });
 
-         toast.success("SKU added to Cloudinary Vault");
+         toast.success("Product added successfully");
          setIsDialogOpen(false);
          reset();
          fetchItems();
@@ -89,19 +89,19 @@ export default function ItemsPage() {
    return (
       <div className="max-w-6xl mx-auto">
          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-medium tracking-tight">Catalog</h1>
+            <h1 className="text-3xl font-medium tracking-tight">Products & Services</h1>
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                <DialogTrigger asChild>
-                  <Button className="bg-white text-black hover:bg-neutral-200">Create SKU</Button>
+                  <Button className="bg-white text-black hover:bg-neutral-200">Add Product/Service</Button>
                </DialogTrigger>
                <DialogContent className="bg-[#0c0c0c] border border-white/8 text-white">
                   <DialogHeader>
-                     <DialogTitle>Add Inventory SKU</DialogTitle>
+                     <DialogTitle>Add New Product/Service</DialogTitle>
                   </DialogHeader>
                   <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
                      <div className="space-y-2">
-                        <Label>Item Title</Label>
+                        <Label>Product/Service Name</Label>
                         <Input {...register("name")} className="bg-[#111] border-white/10" placeholder="e.g. Premium UI Design" />
                         {errors.name && <p className="text-red-400 text-xs">{errors.name.message}</p>}
                      </div>
@@ -115,11 +115,11 @@ export default function ItemsPage() {
                         {errors.default_price && <p className="text-red-400 text-xs">{errors.default_price.message}</p>}
                      </div>
                      <div className="space-y-2">
-                        <Label>Product Image <span className="text-neutral-500 font-mono text-xs">(Pipes to Cloudinary)</span></Label>
+                        <Label>Product Image</Label>
                         <Input type="file" accept="image/*" {...register("image")} className="bg-[#111] border-white/10 file:bg-white file:text-black file:border-none file:mr-4 file:px-2 file:py-1 file:rounded-sm hover:file:bg-neutral-200 cursor-pointer" />
                      </div>
                      <Button type="submit" disabled={isSubmitting} className="w-full bg-white text-black mt-4 h-11 transition-colors hover:bg-neutral-200">
-                        {isSubmitting ? "Uploading binary..." : "Save to Vault"}
+                        {isSubmitting ? "Saving Product..." : "Save Product"}
                      </Button>
                   </form>
                </DialogContent>
@@ -127,10 +127,10 @@ export default function ItemsPage() {
          </div>
 
          {isLoading ? (
-            <div className="text-center py-20 text-neutral-500 font-mono">Loading edge vault...</div>
+            <div className="text-center py-20 text-neutral-500 font-mono">Loading catalog...</div>
          ) : items.length === 0 ? (
             <div className="border border-white/8 rounded-xl bg-[#0c0c0c] p-16 text-center text-neutral-500 border-dashed hover:bg-[#111] transition-colors">
-               No items in catalog. Build your inventory above.
+               Your catalog is empty. Add your first product/service to get started.
             </div>
          ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-6">

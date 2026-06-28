@@ -17,30 +17,30 @@
 }
 
 :root {
-  --background: oklch(0.145 0 0);
+  --background: #090909;
   --radius: 0.5rem;
 }
 
 /* Force everything to resolve to deep Silicon-Valley dark mode */
 .dark {
-  --background: #080808;
-  --foreground: #ededed;
-  --card: #0c0c0c;
-  --card-foreground: #ededed;
-  --popover: #0c0c0c;
-  --popover-foreground: #ededed;
-  --primary: #ededed;
-  --primary-foreground: #080808;
-  --secondary: #1a1a1a;
-  --secondary-foreground: #ededed;
-  --muted: #1a1a1a;
-  --muted-foreground: #a1a1aa;
-  --accent: #1a1a1a;
-  --accent-foreground: #ededed;
+  --background: #090909;
+  --foreground: #FAFAFA;
+  --card: #111111;
+  --card-foreground: #FAFAFA;
+  --popover: #111111;
+  --popover-foreground: #FAFAFA;
+  --primary: #F97316;
+  --primary-foreground: #FAFAFA;
+  --secondary: #161616;
+  --secondary-foreground: #FAFAFA;
+  --muted: #161616;
+  --muted-foreground: #9CA3AF;
+  --accent: #F97316;
+  --accent-foreground: #FAFAFA;
   --destructive: #7f1d1d;
-  --border: rgba(255, 255, 255, 0.08);
-  --input: rgba(255, 255, 255, 0.08);
-  --ring: rgba(255, 255, 255, 0.15);
+  --border: #262626;
+  --input: #262626;
+  --ring: rgba(249, 115, 22, 0.35);
   --radius: 0.5rem;
 }
 
@@ -50,6 +50,59 @@
   }
   body {
     /* Critical Fix: Re-applying font-sans locally to ensure browser ignores Serif fallbacks */
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-[#090909] text-[#FAFAFA] font-sans antialiased;
   }
+}
+
+@keyframes orange-shine {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes slow-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-orange-shine {
+  background: linear-gradient(
+    to right,
+    #9ca3af 0%,
+    #fb923c 25%,
+    #f97316 50%,
+    #fb923c 75%,
+    #9ca3af 100%
+  );
+  background-size: 200% auto;
+  color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: orange-shine 4s linear infinite;
+}
+
+.animate-slow-rotate {
+  animation: slow-rotate 25s linear infinite;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 30s linear infinite;
 }

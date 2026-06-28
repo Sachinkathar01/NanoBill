@@ -36,7 +36,7 @@ export default function ClientsPage() {
       const res = await api.get("/clients");
       setClients(res.data.clients);
     } catch {
-      toast.error("Failed to load clients database");
+      toast.error("Failed to load clients");
     } finally {
       setIsLoading(false);
     }
@@ -90,7 +90,7 @@ export default function ClientsPage() {
                      <Input {...register("address")} className="bg-[#111] border-white/10" placeholder="123 Tech Park" />
                   </div>
                   <Button type="submit" disabled={isSubmitting} className="w-full bg-white text-black mt-4 h-11 font-medium hover:bg-neutral-200 transition-colors">
-                     {isSubmitting ? "Saving..." : "Save to Database"}
+                     {isSubmitting ? "Saving Client..." : "Save Client"}
                   </Button>
                </form>
             </DialogContent>
@@ -109,9 +109,9 @@ export default function ClientsPage() {
              </TableHeader>
              <TableBody>
                 {isLoading ? (
-                   <TableRow className="border-none hover:bg-transparent"><TableCell colSpan={4} className="text-center py-12 text-neutral-500 font-mono">Loading vault...</TableCell></TableRow>
+                   <TableRow className="border-none hover:bg-transparent"><TableCell colSpan={4} className="text-center py-12 text-neutral-500 font-mono">Loading clients...</TableCell></TableRow>
                 ) : clients.length === 0 ? (
-                   <TableRow className="border-none hover:bg-transparent"><TableCell colSpan={4} className="text-center py-12 text-neutral-500 font-mono border-dashed">No clients tracked. Add one above.</TableCell></TableRow>
+                   <TableRow className="border-none hover:bg-transparent"><TableCell colSpan={4} className="text-center py-12 text-neutral-500 font-mono border-dashed">No clients found. Add a client to get started.</TableCell></TableRow>
                 ) : (
                    clients.map((c) => (
                       <TableRow key={c.id} className="border-white/[0.05] hover:bg-white/[0.02] cursor-pointer transition-colors">
